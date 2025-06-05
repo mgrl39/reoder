@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Code Practice</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Remix Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+        :root {
+            --card-bg: #ffffff;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+            --accent: #2563eb;
+            --success: #22c55e;
+            --warning: #eab308;
+            --error: #dc2626;
+            --info: #0ea5e9;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            min-height: 100vh;
+            background-color: #f1f5f9;
+            padding: 1rem;
+            color: #1f2937;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 1.5rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        .title {
+            font-size: 1.75rem;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .code-input {
+            width: 100%;
+            background: #fff;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.95rem;
+            resize: vertical;
+            min-height: 120px;
+            transition: all 0.3s ease;
+        }
+
+        .code-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .buttons {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            margin: 1.25rem 0;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.2s ease;
+            color: white;
+        }
+
+        .btn i {
+            font-size: 1.1rem;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
+        }
+
+        .btn-success {
+            background: var(--success);
+            box-shadow: 0 2px 8px rgba(34, 197, 94, 0.2);
+        }
+        
+        .btn-warning {
+            background: var(--warning);
+            box-shadow: 0 2px 8px rgba(234, 179, 8, 0.2);
+        }
+
+        .btn:hover {
+            filter: brightness(110%);
+            transform: translateY(-1px);
+        }
+
+        .workspace {
+            display: grid;
+            grid-template-columns: 45% 55%;
+            gap: 1.5rem;
+            height: calc(100vh - 280px);
+            min-height: 400px;
+        }
+
+        .drop-zone {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 1rem;
+            position: relative;
+            border: 2px solid #e2e8f0;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .zone-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .zone-counter {
+            font-size: 0.8rem;
+            background: #e2e8f0;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            color: #4b5563;
+        }
+
+        .code-piece {
+            background: white;
+            border-radius: 6px;
+            padding: 0.6rem 0.75rem;
+            margin: 0.4rem 0;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            cursor: move;
+            box-shadow: var(--shadow-sm);
+            border-left: 4px solid #94a3b8;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .code-piece:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .code-piece.dragging {
+            opacity: 0.5;
+            box-shadow: none;
+            background: #f1f5f9;
+        }
+
+        .drop-indicator {
+            height: 6px;
+            background: var(--accent);
+            border-radius: 3px;
+            margin: 0.25rem 0;
+            position: relative;
+            animation: pulse 1.5s infinite;
+            z-index: 10;
+        }
+        
+        /* Nueva flecha indicadora para mayor visibilidad */
+        .drop-indicator::before {
+            content: "▼";
+            position: absolute;
+            left: -15px;
+            top: -8px;
+            color: var(--accent);
+            font-size: 14px;
+            animation: bounce 0.8s infinite;
+        }
+        
+        .drop-indicator::after {
+            content: "▼";
+            position: absolute;
+            right: -15px;
+            top: -8px;
+            color: var(--accent);
+            font-size: 14px;
+            animation: bounce 0.8s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.4; }
+            50% { opacity: 1; }
+            100% { opacity: 0.4; }
+        }
+        
+        /* Resaltado para la zona de soltar activa */
+        .drop-zone.active-drop-target {
+            background-color: rgba(37, 99, 235, 0.05);
+            border-color: var(--accent);
+        }
+        
+        .status-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            background: #f1f5f9;
+        }
+        
+        .score-pill {
+            border-radius: 20px;
+            padding: 0.2rem 0.6rem;
+            font-weight: 500;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.8rem;
+        }
+        
+        .score-exact {
+            background: var(--success);
+        }
+        
+        .score-proximity {
+            background: var(--info);
+        }
+        
+        .hint-badge {
+            position: absolute;
+            right: 0.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #fff;
+            border-radius: 4px;
+            padding: 0.15rem 0.4rem;
+            font-size: 0.7rem;
+            font-weight: 500;
+            opacity: 0.9;
+        }
+        
+        .hint-correct {
+            background: var(--success);
+        }
+        
+        .hint-close {
+            background: var(--warning);
+        }
+        
+        .hint-far {
+            background: var(--error);
+        }
+        
+        .correct-line {
+            border-left-color: var(--success);
+            animation: flash-success 1s;
+        }
+        
+        .close-line {
+            border-left-color: var(--warning);
+        }
+        
+        .far-line {
+            border-left-color: var(--error);
+        }
+        
+        .invalid-line {
+            border-left-color: #94a3b8;
+            opacity: 0.7;
+            background: #f8fafc;
+        }
+
+        @keyframes flash-success {
+            0% { background-color: rgba(34, 197, 94, 0.2); }
+            100% { background-color: white; }
+        }
+        
+        .toggle-hints {
+            position: absolute;
+            right: 1.5rem;
+            top: 1.5rem;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            color: #64748b;
+        }
+        
+        .toggle-hints:hover {
+            background: #e2e8f0;
+        }
+        
+        .progress-container {
+            height: 6px;
+            background-color: #e2e8f0;
+            border-radius: 3px;
+            margin: 0.5rem 0;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--error), var(--warning), var(--success));
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+
+        @media (max-width: 768px) {
+            .workspace {
+                grid-template-columns: 1fr;
+                grid-template-rows: 1fr 1fr;
+                height: auto;
+            }
+            
+            .drop-zone {
+                min-height: 200px;
+            }
+            
+            .buttons {
+                flex-wrap: wrap;
+            }
+            
+            .toggle-hints {
+                position: static;
+                margin-bottom: 1rem;
+                align-self: flex-end;
+                display: inline-flex;
+            }
+            
+            .card-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <button id="toggleHints" class="toggle-hints">
+                <i class="ri-lightbulb-line"></i>
+                Show Hints
+            </button>
+            
+            <h1 class="title">
+                <i class="ri-code-line"></i>
+                Code Practice
+            </h1>
+
+            <textarea class="code-input" id="codeInput" 
+                      placeholder="Paste your code here..."></textarea>
+
+            <div class="buttons">
+                <button onclick="processCode()" class="btn btn-primary">
+                    <i class="ri-play-fill"></i>
+                    Start
+                </button>
+                <button onclick="showSolution()" class="btn btn-primary">
+                    <i class="ri-eye-fill"></i>
+                    Solution
+                </button>
+                <button onclick="resetPractice()" class="btn btn-warning">
+                    <i class="ri-refresh-line"></i>
+                    Reset
+                </button>
+            </div>
+            
+            <div id="progressContainer" class="progress-container" style="display:none;">
+                <div id="progressBar" class="progress-bar" style="width:0%"></div>
+            </div>
+        </div>
+
+        <div class="workspace">
+            <div class="card" style="margin:0; height:100%;">
+                <div class="zone-title">
+                    <div><i class="ri-draft-line"></i> Code Pieces</div>
+                    <span id="piecesCounter" class="zone-counter">0 pieces</span>
+                </div>
+                <div id="codePieces" class="drop-zone"></div>
+            </div>
+
+            <div class="card" style="margin:0; height:100%;">
+                <div class="zone-title">
+                    <div><i class="ri-check-double-line"></i> Your Solution</div>
+                    <span id="solutionCounter" class="zone-counter">0/0 lines</span>
+                </div>
+                <div id="solutionArea" class="drop-zone"></div>
+                <div id="statusInfo" class="status-info" style="display:none;">
+                    <div>
+                        <span class="score-pill score-exact"><i class="ri-check-line"></i> <span id="exactScore">0%</span></span>
+                        <span class="score-pill score-proximity"><i class="ri-radar-line"></i> <span id="proximityScore">0%</span></span>
+                    </div>
+                    <div id="feedbackText" style="color:#64748b;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let originalLines = [];
+        let dragTarget = null;
+        let showHints = false;
+        let lastMutationTime = 0;
+        let currentDragOverTimeout = null;
+        
+        // Set up toggle for hints
+        document.getElementById('toggleHints').addEventListener('click', function() {
+            showHints = !showHints;
+            this.innerHTML = showHints ? 
+                '<i class="ri-lightbulb-fill"></i> Hide Hints' : 
+                '<i class="ri-lightbulb-line"></i> Show Hints';
+            if (document.querySelectorAll('#solutionArea .code-piece').length > 0) {
+                checkOrder();
+            }
+        });
+
+        // Set up mutation observer for real-time feedback
+        function setupMutationObserver() {
+            // Create a MutationObserver to watch for changes to the solution area
+            const observer = new MutationObserver(function(mutations) {
+                const now = Date.now();
+                // Debounce the check to avoid too many calculations
+                if (now - lastMutationTime > 200) { // only check every 200ms
+                    lastMutationTime = now;
+                    checkOrder();
+                    updateCounters();
+                }
+            });
+
+            // Start observing the solution area for changes
+            observer.observe(document.getElementById('solutionArea'), {
+                childList: true, // watch for changes to child elements
+                subtree: false,  // don't need to watch the entire subtree
+                attributes: false // don't need to watch for attribute changes
+            });
+
+            // Also observe the code pieces area
+            observer.observe(document.getElementById('codePieces'), {
+                childList: true,
+                subtree: false
+            });
+        }
+
+        function processCode() {
+            const input = document.getElementById('codeInput').value;
+            originalLines = input.split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0);
+
+            const shuffledLines = [...originalLines]
+                .sort(() => Math.random() - 0.5);
+
+            const piecesContainer = document.getElementById('codePieces');
+            piecesContainer.innerHTML = '';
+            shuffledLines.forEach((line, index) => {
+                const piece = createCodePiece(line, index);
+                piecesContainer.appendChild(piece);
+            });
+
+            document.getElementById('solutionArea').innerHTML = '';
+            document.getElementById('progressContainer').style.display = 'block';
+            document.getElementById('statusInfo').style.display = 'flex';
+            
+            setupDragAndDrop();
+            setupMutationObserver();
+            updateCounters();
+            checkOrder();
+        }
+
+        function createCodePiece(line, index) {
+            const piece = document.createElement('div');
+            piece.className = 'code-piece';
+            piece.draggable = true;
+            piece.textContent = line;
+            piece.dataset.content = line;
+            piece.dataset.originalIndex = originalLines.indexOf(line);
+            return piece;
+        }
+        
+        function updateCounters() {
+            const piecesCount = document.getElementById('codePieces').children.length;
+            const solutionCount = document.getElementById('solutionArea').children.length;
+            
+            document.getElementById('piecesCounter').textContent = `${piecesCount} pieces`;
+            document.getElementById('solutionCounter').textContent = `${solutionCount}/${originalLines.length} lines`;
+        }
+
+        function setupDragAndDrop() {
+            const dropZones = document.querySelectorAll('.drop-zone');
+            const pieces = document.querySelectorAll('.code-piece');
+
+            pieces.forEach(piece => {
+                piece.addEventListener('dragstart', handleDragStart);
+                piece.addEventListener('dragend', handleDragEnd);
+            });
+
+            dropZones.forEach(zone => {
+                zone.addEventListener('dragover', handleDragOver);
+                zone.addEventListener('dragleave', handleDragLeave);
+                zone.addEventListener('drop', handleDrop);
+                zone.addEventListener('dragenter', handleDragEnter);
+            });
+        }
+
+        function handleDragStart(e) {
+            dragTarget = e.target;
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', e.target.dataset.content);
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+            removeDragIndicators();
+            
+            // También elimina la clase active-drop-target de todas las zonas
+            document.querySelectorAll('.drop-zone').forEach(zone => {
+                zone.classList.remove('active-drop-target');
+            });
+        }
+        
+        function handleDragEnter(e) {
+            e.preventDefault();
+            
+            // Resaltar la zona cuando el elemento entra en ella
+            document.querySelectorAll('.drop-zone').forEach(zone => {
+                zone.classList.remove('active-drop-target');
+            });
+            e.currentTarget.classList.add('active-drop-target');
+        }
+        
+        function handleDragLeave(e) {
+            // Si el ratón sale de la zona, quitar la clase de resaltado
+            // Pero solo si sale realmente de la zona, no si se mueve dentro
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = e.clientX;
+            const y = e.clientY;
+            
+            if (x < rect.left || x >= rect.right || y < rect.top || y >= rect.bottom) {
+                e.currentTarget.classList.remove('active-drop-target');
+            }
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            
+            // Clear any pending timeout to avoid multiple indicators
+            if (currentDragOverTimeout) {
+                clearTimeout(currentDragOverTimeout);
+            }
+            
+            // Use timeout to throttle the creation of indicators
+            currentDragOverTimeout = setTimeout(() => {
+                const dropZone = e.currentTarget;
+                const afterElement = getDragAfterElement(dropZone, e.clientY);
+                
+                // Clear all existing indicators first
+                removeDragIndicators();
+                
+                // Create only one indicator at the appropriate position
+                if (afterElement) {
+                    const indicator = document.createElement('div');
+                    indicator.className = 'drop-indicator';
+                    indicator.id = 'currentDropIndicator';
+                    afterElement.parentNode.insertBefore(indicator, afterElement);
+                } else if (dropZone.children.length > 0) {
+                    const indicator = document.createElement('div');
+                    indicator.className = 'drop-indicator';
+                    indicator.id = 'currentDropIndicator';
+                    dropZone.appendChild(indicator);
+                } else {
+                    // Si la zona está vacía, mostrar un indicador en el centro
+                    const indicator = document.createElement('div');
+                    indicator.className = 'drop-indicator';
+                    indicator.id = 'currentDropIndicator';
+                    indicator.style.margin = "40px 0";
+                    dropZone.appendChild(indicator);
+                }
+                
+                currentDragOverTimeout = null;
+            }, 30); // Short delay for smoother experience
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            
+            // Clear any pending timeout
+            if (currentDragOverTimeout) {
+                clearTimeout(currentDragOverTimeout);
+                currentDragOverTimeout = null;
+            }
+            
+            const dropZone = e.currentTarget;
+            const afterElement = getDragAfterElement(dropZone, e.clientY);
+            
+            if (dragTarget) {
+                if (afterElement) {
+                    dropZone.insertBefore(dragTarget, afterElement);
+                } else {
+                    dropZone.appendChild(dragTarget);
+                }
+            }
+            
+            // Remove all drop indicators and active zone highlighting
+            removeDragIndicators();
+            dropZone.classList.remove('active-drop-target');
+        }
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.code-piece:not(.dragging)')];
+            
+            if (draggableElements.length === 0) return null;
+
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        function removeDragIndicators() {
+            document.querySelectorAll('.drop-indicator').forEach(indicator => {
+                indicator.remove();
+            });
+        }
+
+        function checkOrder() {
+            const solutionArea = document.getElementById('solutionArea');
+            const pieces = Array.from(solutionArea.children);
+            
+            if (pieces.length === 0 || originalLines.length === 0) {
+                return;
+            }
+            
+            // Remove all previous hints
+            document.querySelectorAll('.hint-badge').forEach(hint => hint.remove());
+            
+            // Initialize counters
+            let correct = 0;
+            let totalDistance = 0;
+            let maxDistance = originalLines.length - 1;
+            
+            // Check each line against original
+            pieces.forEach((piece, currentIndex) => {
+                const line = piece.dataset.content;
+                
+                // Reset classes
+                piece.className = 'code-piece';
+                
+                // Find if and where this line exists in the original code
+                const originalIndex = originalLines.indexOf(line);
+                
+                if (originalIndex === -1) {
+                    // Line doesn't exist in original
+                    piece.classList.add('invalid-line');
+                    
+                    if (showHints) {
+                        const hint = document.createElement('div');
+                        hint.className = 'hint-badge';
+                        hint.style.backgroundColor = '#94a3b8'; // gray
+                        hint.textContent = "N/A";
+                        piece.appendChild(hint);
+                    }
+                } else {
+                    // Calculate how far the line is from its correct position
+                    const distance = Math.abs(currentIndex - originalIndex);
+                    totalDistance += distance;
+                    
+                    // Perfectly correct position
+                    if (distance === 0) {
+                        piece.classList.add('correct-line');
+                        correct++;
+                        
+                        if (showHints) {
+                            const hint = document.createElement('div');
+                            hint.className = 'hint-badge hint-correct';
+                            hint.textContent = "✓";
+                            piece.appendChild(hint);
+                        }
+                    } else {
+                        // Apply different classes based on distance
+                        if (distance <= Math.ceil(originalLines.length * 0.2)) {
+                            piece.classList.add('close-line');
+                            
+                            if (showHints) {
+                                const hint = document.createElement('div');
+                                hint.className = 'hint-badge hint-close';
+                                if (currentIndex > originalIndex) {
+                                    hint.textContent = `↑${distance}`;
+                                } else {
+                                    hint.textContent = `↓${distance}`;
+                                }
+                                piece.appendChild(hint);
+                            }
+                        } else {
+                            piece.classList.add('far-line');
+                            
+                            if (showHints) {
+                                const hint = document.createElement('div');
+                                hint.className = 'hint-badge hint-far';
+                                if (currentIndex > originalIndex) {
+                                    hint.textContent = `↑${distance}`;
+                                } else {
+                                    hint.textContent = `↓${distance}`;
+                                }
+                                piece.appendChild(hint);
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Update statistics
+            const totalLines = Math.max(pieces.length, originalLines.length);
+            const exactPercentage = Math.round((correct / totalLines) * 100);
+            
+            let proximityScore = 100;
+            if (totalDistance > 0 && pieces.length > 0) {
+                // Calculate proximity score (100% = perfect, 0% = worst possible)
+                const worstCase = pieces.length * maxDistance;
+                proximityScore = Math.round(100 - (totalDistance / worstCase * 100));
+                proximityScore = Math.max(0, proximityScore);
+            }
+            
+            // Update progress bar
+            document.getElementById('progressBar').style.width = `${proximityScore}%`;
+            
+            // Update score pills
+            document.getElementById('exactScore').textContent = `${exactPercentage}%`;
+            document.getElementById('proximityScore').textContent = `${proximityScore}%`;
+            
+            // Update feedback text
+            const feedbackText = document.getElementById('feedbackText');
+            if (correct === originalLines.length && pieces.length === originalLines.length) {
+                feedbackText.textContent = "Perfect! All lines in correct order.";
+            } else if (proximityScore >= 80) {
+                feedbackText.textContent = "Very close! Just a few adjustments needed.";
+            } else if (proximityScore >= 50) {
+                feedbackText.textContent = "Getting there! Keep organizing the lines.";
+            } else {
+                feedbackText.textContent = "Keep trying! Use the hints for guidance.";
+            }
+        }
+
+        function showSolution() {
+            const solutionArea = document.getElementById('solutionArea');
+            solutionArea.innerHTML = '';
+            
+            originalLines.forEach((line, index) => {
+                const piece = createCodePiece(line, index);
+                piece.classList.add('correct-line');
+                solutionArea.appendChild(piece);
+            });
+            
+            updateCounters();
+            
+            // Update UI elements
+            document.getElementById('progressBar').style.width = '100%';
+            document.getElementById('exactScore').textContent = '100%';
+            document.getElementById('proximityScore').textContent = '100%';
+            document.getElementById('feedbackText').textContent = "Solution shown";
+        }
+
+        function resetPractice() {
+            document.getElementById('codePieces').innerHTML = '';
+            document.getElementById('solutionArea').innerHTML = '';
+            document.getElementById('codeInput').value = '';
+            document.getElementById('progressContainer').style.display = 'none';
+            document.getElementById('statusInfo').style.display = 'none';
+            document.getElementById('piecesCounter').textContent = '0 pieces';
+            document.getElementById('solutionCounter').textContent = '0/0 lines';
+            originalLines = [];
+        }
+    </script>
+</body>
+</html>
